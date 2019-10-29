@@ -165,7 +165,8 @@ public class PathFinding : MonoBehaviour
 
         currentTile = _listOpen[0];    // get lowest score
 
-        _listClosed.Add(currentTile);   // add lowest score tile to closed list
+        if (!_listClosed.Contains(currentTile))
+            _listClosed.Add(currentTile);   // add lowest score tile to closed list
         _listOpen.Remove(currentTile);  // remove lowest score tile from opened list
 
         if (currentTile.transform.position == _destination.transform.position)
@@ -208,6 +209,10 @@ public class PathFinding : MonoBehaviour
                         _listWalkableTiles.Add(tileComp);
                     }
                 }
+            }
+            else
+            {
+                Debug.Log("There is no ways");
             }
         }
 
