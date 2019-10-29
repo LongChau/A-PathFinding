@@ -17,6 +17,10 @@ using UnityEngine.Events;
 /// </summary>
 public class PathFinding : MonoBehaviour
 {
+    private int curWaypointIndex = 0;
+    [SerializeField]
+    private float speed = 10f;
+
     [SerializeField]
     private List<Transform> _listTiles = new List<Transform>();
 
@@ -55,11 +59,11 @@ public class PathFinding : MonoBehaviour
     [SerializeField]
     private Tile currentTile;
 
-    [SerializeField, Header("Final path")]
-    private List<Tile> _listResult = new List<Tile>();
-
     [SerializeField]
     private Transform _parentTransform;
+
+    [SerializeField, Header("Final path")]
+    private List<Tile> _listResult = new List<Tile>();
 
     public Tile Destination { get => _destination; set => _destination = value; }
 
@@ -84,9 +88,7 @@ public class PathFinding : MonoBehaviour
         MoveCharacter();
     }
 
-    private int curWaypointIndex = 0;
-    [SerializeField]
-    private float speed = 10f;
+
     private void MoveCharacter()
     {
         if (_listResult.Count != 0)
@@ -98,7 +100,7 @@ public class PathFinding : MonoBehaviour
 
                 if (Vector3.Distance(_listResult[curWaypointIndex].transform.position, _parentTransform.position) <= 0.5f)
                 {
-                    Debug.Log("Next waypoint");
+                    //Debug.Log("Next waypoint");
                     _parentTransform.position = curPointPos;
                     curWaypointIndex++;
                 }
@@ -194,7 +196,7 @@ public class PathFinding : MonoBehaviour
                     var tile = raycastHitInfo.collider.transform;
                     var tileComp = tile.GetComponent<Tile>();
 
-                    Debug.Log($"Tile score: {tileComp.FCost}");
+                    //Debug.Log($"Tile score: {tileComp.FCost}");
 
                     // calculate score
                     tileComp.HCost = CalculateManhattanDistance(tile.transform.position.x, _destination.transform.position.x,
@@ -209,10 +211,6 @@ public class PathFinding : MonoBehaviour
                         _listWalkableTiles.Add(tileComp);
                     }
                 }
-            }
-            else
-            {
-                Debug.Log("There is no ways");
             }
         }
 
