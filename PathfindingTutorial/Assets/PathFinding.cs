@@ -58,6 +58,9 @@ public class PathFinding : MonoBehaviour
     [SerializeField, Header("Final path")]
     private List<Tile> _listResult = new List<Tile>();
 
+    [SerializeField]
+    private Transform _parentTransform;
+
     public Tile Destination { get => _destination; set => _destination = value; }
 
     // Start is called before the first frame update
@@ -73,12 +76,66 @@ public class PathFinding : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!_isFoundPath && _destination != null)
+        if (CanFindPath())
+        {
             AutoFindPath();
+        }
+
+        MoveCharacter();
+    }
+
+    private int curWaypointIndex = 0;
+    [SerializeField]
+    private float speed = 10f;
+    private void MoveCharacter()
+    {
+        if (_listResult.Count != 0)
+        {
+            if (curWaypointIndex < _listResult.Count)
+            {
+                var curPointPos = _listResult[curWaypointIndex].transform.position;
+                _parentTransform.Translate((curPointPos - _parentTransform.position).normalized * speed * Time.deltaTime);
+
+                if (Vector3.Distance(_listResult[curWaypointIndex].transform.position, _parentTransform.position) <= 0.5f)
+                {
+                    Debug.Log("Next waypoint");
+                    _parentTransform.position = curPointPos;
+                    curWaypointIndex++;
+                }
+            }
+        }
+    }
+
+    private bool CanFindPath()
+    {
+        return !_isFoundPath && _destination != null;
+    }
+
+    private void FindStartPlace()
+    {
+        if (_startPlace == null)
+        {
+            var newPos = transform.position;
+
+            RaycastHit raycastHitInfo;
+
+            if (Physics.Raycast(new Ray(newPos, Vector3.down * 10f), out raycastHitInfo))
+            {
+                if (raycastHitInfo.collider != null && raycastHitInfo.collider.CompareTag("Road"))
+                {
+                    var tile = raycastHitInfo.collider.transform;
+                    var tileComp = tile.GetComponent<Tile>();
+
+                    _startPlace = tileComp;
+                }
+            }
+        }
     }
 
     private void AutoFindPath()
     {
+        FindStartPlace();
+
         // add our first position in open list
         _listOpen.Add(_startPlace);
 
@@ -92,8 +149,11 @@ public class PathFinding : MonoBehaviour
     private List<Tile> _listWalkableTiles = new List<Tile>();
     private void FindPath()
     {
+        FindStartPlace();
+
         // add our first position in open list
         _listOpen.Add(_startPlace);
+
         FindPathContiniously();
     }
 
@@ -122,9 +182,9 @@ public class PathFinding : MonoBehaviour
             var directionPos = _dictDirections[directionIndex];
             var newPos = currentTile.transform.position + directionPos + Vector3.up * 2f;
 
-            RaycastHit raycastHitInfo;
-
             Debug.DrawRay(newPos, Vector3.down * 10f, Color.green);
+
+            RaycastHit raycastHitInfo;
 
             if (Physics.Raycast(new Ray(newPos, Vector3.down * 10f), out raycastHitInfo))
             {
@@ -198,8 +258,11 @@ public class PathFinding : MonoBehaviour
         _listWalkableTiles.Clear();
 
         currentTile = null;
+        _startPlace = null;
 
         _isFoundPath = false;
+
+        curWaypointIndex = 0;
 
         foreach (var tile in _listTiles)
         {
