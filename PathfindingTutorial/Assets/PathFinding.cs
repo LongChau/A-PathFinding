@@ -30,10 +30,17 @@ public class PathFinding : MonoBehaviour
 
     private Dictionary<int, Vector3> _dictDirections = new Dictionary<int, Vector3>()
     {
+        // Fire emblem style movement
         { 0, new Vector3(0f, 0f, 10f) },
         { 1, new Vector3(0f, 0f, -10f) },
         { 2, new Vector3(10f, 0f, 0f) },
         { 3, new Vector3(-10f, 0f, 0f) },
+
+        // 8 path movement
+        { 4, new Vector3(-10f, 0f, 10f) },
+        { 5, new Vector3(10f, 0f, 10f) },
+        { 6, new Vector3(-10f, 0f, -10f) },
+        { 7, new Vector3(10f, 0f, -10f) },
     };
 
     [SerializeField]
