@@ -9,7 +9,7 @@ public class Tile : MonoBehaviour
     [SerializeField]
     private TileType _tileType;
 
-    public UnityEvent<Tile> OnTouchTile;
+    public UnityAction<Tile> OnTouchTile;
 
     [SerializeField]
     private float _fCost = 0;
@@ -43,13 +43,29 @@ public class Tile : MonoBehaviour
 
     [SerializeField]
     private Material _pathMat;
+    [SerializeField]
+    private Material _roadMat;
+    [SerializeField]
+    private Material _destinationMat;
+    [SerializeField]
+    private Material _blockMat;
 
+    [SerializeField]
     private MeshRenderer _meshRender;
+
+    private void OnValidate()
+    {
+        _meshRender = GetComponent<MeshRenderer>();
+
+        // check change to road or block
+        ChangeToRoadMat();
+        ChangeToBlockMat();
+    }
 
     // Start is called before the first frame update
     void Start()
     {
-        _meshRender = GetComponent<MeshRenderer>();
+        
     }
 
     private void OnMouseDown()
@@ -76,6 +92,35 @@ public class Tile : MonoBehaviour
     public void ChangeToPathColor()
     {
         _meshRender.material = _pathMat;
+    }
+
+    public void ChangeToDestinationColor()
+    {
+        _meshRender.material = _destinationMat;
+    }
+
+    public void ChangeToRoadMat()
+    {
+        if (_tileType == TileType.Road)
+        {
+            _meshRender.material = _roadMat;
+            gameObject.tag = "Road";
+        }
+    }
+
+    public void ChangeToBlockMat()
+    {
+        if (_tileType == TileType.Block)
+        {
+            _meshRender.material = _blockMat;
+            gameObject.tag = "Block";
+        }
+    }
+
+    [ContextMenu("ResetMat")]
+    public void ResetMat()
+    {
+        ChangeToRoadMat();
     }
 }
 

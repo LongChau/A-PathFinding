@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Events;
 
 /// <summary>
 /// Play the game
@@ -44,22 +45,28 @@ public class PathFinding : MonoBehaviour
     [SerializeField]
     private bool _isFoundPath;
 
+    [SerializeField]
+    private Tile currentTile;
+
+    [SerializeField, Header("Final path")]
+    private List<Tile> _listResult = new List<Tile>();
+
+    public Tile Destination { get => _destination; set => _destination = value; }
+
     // Start is called before the first frame update
     void Start()
     {
         foreach (var tile in _listTiles)
         {
             var tileComp = tile.GetComponent<Tile>();
-            tileComp?.OnTouchTile?.AddListener(Handle_OnTouchTile);
+            tileComp.OnTouchTile = Handle_OnTouchTile;
         }
-
-     
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!_isFoundPath)
+        if (!_isFoundPath && _destination != null)
             AutoFindPath();
     }
 
@@ -80,17 +87,9 @@ public class PathFinding : MonoBehaviour
     {
         // add our first position in open list
         _listOpen.Add(_startPlace);
-
-        //while (_listOpen.Count > 0)
-        //{
         FindPathContiniously();
-        //}
-
-        // TODO: END LOOP HERE
     }
 
-    [SerializeField]
-    private Tile currentTile;
     [ContextMenu("FindPathContiniously")]
     private void FindPathContiniously()
     {
@@ -111,7 +110,6 @@ public class PathFinding : MonoBehaviour
         }
 
         // find adjacent tiles
-        //List<Tile> _listWalkableTiles = new List<Tile>();
         for (int directionIndex = 0; directionIndex < _directions; directionIndex++)
         {
             var directionPos = _dictDirections[directionIndex];
@@ -136,8 +134,12 @@ public class PathFinding : MonoBehaviour
                     tileComp.GCost = CalculateManhattanDistance(tile.transform.position.x, currentTile.transform.position.x,
                         tile.transform.position.z, currentTile.transform.position.z);
 
-                    // Retrieve all walkable tiles
-                    _listWalkableTiles.Add(tileComp);
+                    // ignore if duplicate
+                    if (!_listWalkableTiles.Contains(tileComp))
+                    {
+                        // Retrieve all walkable tiles
+                        _listWalkableTiles.Add(tileComp);
+                    }
                 }
             }
         }
@@ -178,17 +180,33 @@ public class PathFinding : MonoBehaviour
     [ContextMenu("StartFindPath")]
     private void StartFindPath()
     {
+        ResetPath();
+        FindPath();
+    }
+
+    private void ResetPath()
+    {
         _listOpen.Clear();
         _listClosed.Clear();
         _listWalkableTiles.Clear();
 
-        FindPath();
+        currentTile = null;
+
+        _isFoundPath = false;
+
+        foreach (var tile in _listTiles)
+        {
+            var tileComp = tile.GetComponent<Tile>();
+            tileComp.ResetMat();
+        }
     }
 
     public void Handle_OnTouchTile(Tile tile)
     {
         Debug.Log($"Handle_OnTouchTile({tile.transform.position})");
         _destination = tile;
+
+        ResetPath();
     }
 
     /// <summary>
@@ -204,26 +222,15 @@ public class PathFinding : MonoBehaviour
         return Math.Abs(x1 - x2) + Math.Abs(y1 - y2);
     }
 
-    private int ComparisonTwoTuples(Tuple<Tile> a, Tuple<Tile> b)
-    {
-        // Here we sort two times at once, first one the first item, then on the second.
-        // ... Compare the first items of each element.
-        var part1 = a.Item1.FCost;
-        var part2 = b.Item1.FCost;
-        var compareResult = part1.CompareTo(part2);
-
-        // Return the result of the first CompareTo.
-        return compareResult;
-    }
-
-    [SerializeField, Header("Final path")]
-    private List<Tile> _listResult = new List<Tile>();
     void GetFinalPath()
     {
         Debug.Log("GetFinalPath()");
 
         List<Tile> listFinalPath = new List<Tile>();//List to hold the path sequentially
         Tile currentTile = _destination;//Node to store the current node being checked
+
+        currentTile.ChangeToDestinationColor();
+
         while (currentTile != _startPlace)//While loop to work through each node going through the parents to the beginning of the path
         {
             listFinalPath.Add(currentTile);//Add that node to the final path
